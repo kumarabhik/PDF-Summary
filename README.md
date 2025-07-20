@@ -1,102 +1,98 @@
-# PDF Summarizer Chatbot App
-This is a Streamlit-based web application that allows users to upload one or more PDF documents, extract text from them (using OCR if necessary), count embedded images, and ask questions based on the PDF content using a Groq LLM API.
+# PDF Summarizer Chatbot
+
+This project is a **Streamlit-based web application** that allows users to upload multiple PDF files, extract text (including via OCR for scanned PDFs), count embedded images, and ask questions about the content using a **Groq LLM API**. It also optionally supports image reasoning using a **Vision-Language Model (VLM)** API like [vlm.run](https://app.vlm.run/).
+
+---
 
 ## Features
-Upload and process multiple PDF files
 
-Extract text using PyPDF2
+- Upload and analyze multiple PDFs at once.
+- Extract readable text directly or via **OCR** (Tesseract + Poppler).
+- Detect and count images embedded in PDF pages.
+- Ask questions about the PDFs via **Groq LLM API**.
+- Supports theme customization and improved button styling.
+- Optional: Use VLM.run API for PDFs with **heavy image content**.
 
-OCR support using Tesseract and Poppler for scanned or image-based PDFs
-
-Automatically counts and reports the number of images in each PDF
-
-Chat-style interface for querying PDF contents
-
-Custom bubble-style buttons and dark/light theme support
-
-Integration with Groq LLM API (e.g., llama3-8b-8192)
-
-## Requirements
-Python 3.8+
-
-Streamlit
-
-PyPDF2
-
-pdf2image
-
-pytesseract
-
-PIL (Pillow)
-
-requests
-
-Poppler (installed and configured)
-
-Tesseract OCR (installed and configured)
+---
 
 ## Setup Instructions
-Clone the Repository
-Clone this project to your local system or run in a Streamlit environment like Kiro, Cursor, or your IDE.
 
-## Install Required Packages
+### 1. Install Requirements
 
-bash
-Copy
-Edit
+Make sure you have Python 3.9+ installed.
+
+```bash
 pip install -r requirements.txt
-### Install Tesseract OCR
+```
 
-Download and install from: https://github.com/tesseract-ocr/tesseract
+You also need:
 
-Configure path in the code:
+- **[Tesseract OCR](https://github.com/tesseract-ocr/tesseract)**
+- **[Poppler for Windows](http://blog.alivate.com.au/poppler-windows/)**
 
-python
-Copy
-Edit
+Set their paths in your script:
+
+```python
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-### Install Poppler
+POPPLER_PATH = r"C:\Path\To\poppler-xx\Library\bin"
+```
 
-Download from: https://github.com/oschwartz10612/poppler-windows/releases/
+---
 
-## Configure path:
+## How to Run
 
-python
-Copy
-Edit
-POPPLER_PATH = r"C:\path\to\poppler\bin"
-Groq API Key
-You can either:
+```bash
+streamlit run your_script_name.py
+```
 
-Add it in secrets.toml:
+---
 
-toml
-Copy
-Edit
-GROQ_API = "your_groq_api_key"
-Or enter it manually in the sidebar input field.
+## Required Secrets
 
-Run the App
+Create a `secrets.toml` file (in `.streamlit/`) for your Groq API key:
 
-bash
-Copy
-Edit
-streamlit run app.py
-## How It Works
-Upload one or more PDFs using the sidebar.
+```toml
+GROQ_API = "your-groq-api-key"
+```
 
-The app attempts to extract readable text using PyPDF2.
+If you're also using VLM.run for vision-related queries:
 
-If no text is found (e.g., in scanned PDFs), it applies OCR using pytesseract and pdf2image.
+```toml
+VLM_API = "your-vlm-run-api-key"
+```
 
-It also counts the number of embedded images in each PDF and notifies the user.
+---
 
-Users can enter questions in a chat input field, and the app responds using Groq API.
+## Optional: Enable VLM.run for Image-Based Queries
 
-## Image Support
-The app counts and reports the number of images embedded in each PDF.
+To use [vlm.run](https://app.vlm.run/) for image-based understanding:
 
-For better understanding of image content, integration with Vision-Language Models (VLMs) like those from vlm.run is recommended.
+1. **Get your API key** from [https://app.vlm.run/dashboard](https://app.vlm.run/dashboard).
+2. Add it to your `secrets.toml` as shown above.
+3. Modify your Streamlit script to detect when image content is high and route queries to VLM.run.
+
+Example addition:
+
+```python
+if img_count > 0:
+    # Optional call to VLM.run if you want image reasoning
+    vlm_headers = {
+        "Authorization": f"Bearer {st.secrets['VLM_API']}",
+        "Content-Type": "application/json"
+    }
+    vlm_payload = {
+        "model": "vlm-v1",
+        "prompt": "Summarize this image:",
+        "image": encoded_image  # base64 or binary content
+    }
+    response = requests.post("https://api.vlm.run/v1/chat/completions", headers=vlm_headers, json=vlm_payload)
+```
+
+You’ll need to extract and encode the images using `pdf2image` or `PyMuPDF` to pass them as base64 to VLM.run.
+
+---
 
 ## Credits
-Developed by Abhishek using Streamlit and Groq APIs. Designed to assist in PDF summarization, image detection, and AI-powered question answering.
+
+- Built using **Streamlit**, **Tesseract OCR**, and **Groq LLM APIs**.
+- Image reasoning via **[VLM.run](https://app.vlm.run/)** (optional).
